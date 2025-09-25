@@ -1,0 +1,23 @@
+# Normalize text files in repo, check out as LF by default
+* text=auto eol=lf
+
+# Windows-native scripts keep CRLF on checkout
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Always LF for source / configs
+*.py   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sh   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.ini  text eol=lf
+
+# Treat these as binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.ico binary

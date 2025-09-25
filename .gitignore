@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.vscode/
+.venv/
+.venv*/
+.pytest_cache/
+.backups/
+backups/
+coverage.xml
+dist/
+build/
+
+# App runtime
+logs/
+config/
+*.log
+*.jsonl
+*.lock
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Never track secrets or backups
+app/legacy_app/secrets/
+*.bak
+*.bak_*
+token.json
+credentials.json
+
