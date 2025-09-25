@@ -1,0 +1,56 @@
+﻿# File: backend/app/legacy_app/scripts/google_reauth.py
+import os, sys
+from pathlib import Path
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+
+# Ensure relaxed scope behavior (avoids warning-as-exception crash)
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+
+SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/gmail.send",
+    "openid",
+    "email",
+]
+
+def log(x): print(x, flush=True)
+
+secrets_dir = Path(os.environ.get("GOOGLE_SECRETS_DIR") or r"C:\AI files\Stratogen\Secrets\google")
+secrets_dir.mkdir(parents=True, exist_ok=True)
+client_file = secrets_dir / "client_secret.json"
+if not client_file.exists():
+    alt = secrets_dir / "credentials.json"
+    if alt.exists():
+        client_file = alt
+if not client_file.exists():
+    sys.exit(f"[ERR] OAuth client JSON not found in {secrets_dir}")
+
+token_file = secrets_dir / "token.json"
+log(f"[INFO] secrets_dir: {secrets_dir}")
+log(f"[INFO] client_file: {client_file}")
+
+# Prefer local server; on failure (incl. scope Warning), fall back to console flow
+creds = None
+try:
+    flow = InstalledAppFlow.from_client_secrets_file(str(client_file), SCOPES)
+    creds = flow.run_local_server(
+        port=0, prompt="consent", access_type="offline", include_granted_scopes="true"
+    )
+except Exception as e:
+    log(f"[WARN] Local flow failed: {e!r}")
+    log("[INFO] Falling back to console flow...")
+    flow = InstalledAppFlow.from_client_secrets_file(str(client_file), SCOPES)
+    creds = flow.run_console()
+
+log(f"[INFO] refresh_token present: {bool(getattr(creds,'refresh_token',None))}")
+token_file.write_text(creds.to_json(), encoding="utf-8")
+log(f"[OK] token written: {token_file}")
+
+# quick smoke
+try:
+    build("drive", "v3", credentials=creds).files().list(pageSize=1).execute()
+    log("[OK] Drive scope works")
+except Exception as e:
+    log(f"[WARN] Drive smoke failed: {e!r}")
